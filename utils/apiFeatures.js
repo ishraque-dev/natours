@@ -17,7 +17,6 @@ class APIfeatures {
       // eslint-disable-next-line no-return-assign
       (match) => (match = `$${match}`)
     );
-
     this.query = this.query.find(JSON.parse(queryString));
     return this;
   }

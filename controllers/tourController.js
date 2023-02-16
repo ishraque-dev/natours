@@ -6,7 +6,107 @@ exports.aliasTopTour = function (req, res, next) {
   req.query.sort = '-ratingsAverage,price';
   next();
 };
+// Get tours stats use aggregation pipeline
+exports.getTourStats = async function (req, res, next) {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: {
+          ratingsAverage: {
+            $gte: 4.5,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$difficulty',
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          averageRatings: {
+            $avg: '$ratingsAverage',
+          },
+          averagePrice: {
+            $avg: '$price',
+          },
+          minPrice: {
+            $min: '$price',
+          },
+          maxPrice: {
+            $max: '$price',
+          },
+        },
+      },
+      { $sort: { averagePrice: 1 } },
+    ]);
 
+    res.status(200).json({
+      data: {
+        stats,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      error: error,
+    });
+  }
+};
+// Get Monthly Plan using aggregation pipeline
+exports.getMonthlyPlan = async function (req, res, next) {
+  const year = +req.params.year;
+  console.log(year);
+  try {
+    const plans = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: {
+            $sum: 1,
+          },
+          tours: {
+            $push: '$name',
+          },
+        },
+      },
+      {
+        $addFields: {
+          month: '$_id',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          numTourStarts: -1,
+        },
+      },
+    ]);
+    res.status(200).json({
+      data: {
+        plans,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      error: error,
+    });
+  }
+};
 // Get all tours.
 exports.getAllTour = async (req, res) => {
   try {
