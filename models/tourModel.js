@@ -1,3 +1,4 @@
+const slugify = require('slugify');
 // Defining A tour Schema
 const mongoose = require('mongoose');
 
@@ -45,6 +46,13 @@ const tourSchema = new mongoose.Schema(
       select: false, // this will hide the field
     },
     startDates: [Date],
+    slag: {
+      type: String,
+    },
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
     maxGroupSize: {
       type: Number,
       required: [true, 'A tour must have a max group size'],
@@ -66,6 +74,34 @@ const tourSchema = new mongoose.Schema(
 // Virtual properties
 tourSchema.virtual('durationInWeeks').get(function () {
   return this.duration / 7;
+});
+//DOCUMENT MIDDLEWARE.(PRE) runs before .save() and .create()
+tourSchema.pre('save', function (next) {
+  this.slag = slugify(this.name, { lower: true });
+  next();
+});
+//(POST) runs after the .save() and .create()
+// tourSchema.post('save', function (doc, next) {
+//   console.log(doc);
+
+//   next();
+// });
+// ================
+// QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+tourSchema.post(/^find/, (doc, next) => {
+  // console.log(doc);
+  next();
+});
+// AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({
+    $match: { secretTour: { $ne: true } },
+  });
+  next();
 });
 // Creating a new tour model
 const Tour = mongoose.model('Tour', tourSchema);
