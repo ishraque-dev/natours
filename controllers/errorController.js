@@ -1,7 +1,14 @@
 const AppError = require('../utils/appError');
 
 const handleValidationErrorDB = function (err) {
-  const message = `${err.message}`;
+  const errors = Object.values(err.errors).map((el) => el.message);
+  const message = errors.join('. ');
+  return new AppError(message, 400);
+};
+const handleDuplicateFieldErrorDB = function (err) {
+  let value = err.message.match(/(["'])(?:(?=(\\?))\2.)*?\1/);
+
+  const message = `Duplicate key in ${value}.Please choose a different one.`;
   return new AppError(message, 400);
 };
 const sedErrorDev = function (error, res) {
@@ -9,7 +16,7 @@ const sedErrorDev = function (error, res) {
     status: error.status,
     message: error.message,
     stack: error.stack,
-    error: error.errors,
+    error: error,
   });
 };
 const sendErrorProduction = function (error, res) {
@@ -33,9 +40,11 @@ module.exports = (error, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     sedErrorDev(error, res);
   } else if (process.env.NODE_ENV === 'production') {
-    let handledError;
+    let handledError = { ...error };
     if (error.name === 'ValidationError') {
       handledError = handleValidationErrorDB(error);
+    } else if (error.code === 11000) {
+      handledError = handleDuplicateFieldErrorDB(error);
     }
     sendErrorProduction(handledError, res);
   }
