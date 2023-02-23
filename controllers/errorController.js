@@ -11,6 +11,10 @@ const handleDuplicateFieldErrorDB = function (err) {
   const message = `Duplicate key in ${value}.Please choose a different one.`;
   return new AppError(message, 400);
 };
+const handleJWTError = function (error) {
+  const message = error.message;
+  return new AppError(message, 401);
+};
 const sedErrorDev = function (error, res) {
   res.status(error.statusCode).json({
     status: error.status,
@@ -18,6 +22,12 @@ const sedErrorDev = function (error, res) {
     stack: error.stack,
     error: error,
   });
+};
+const handleTokenExpiredError = function (error) {
+  return new AppError(
+    'You token has expired. Please login again to continue.',
+    401
+  );
 };
 const sendErrorProduction = function (error, res) {
   if (error.isOperational) {
@@ -45,6 +55,10 @@ module.exports = (error, req, res, next) => {
       handledError = handleValidationErrorDB(error);
     } else if (error.code === 11000) {
       handledError = handleDuplicateFieldErrorDB(error);
+    } else if (error.name === 'JsonWebTokenError') {
+      handledError = handleJWTError(error);
+    } else if (error.name === 'TokenExpiredError') {
+      handledError = handleTokenExpiredError(error);
     }
     sendErrorProduction(handledError, res);
   }

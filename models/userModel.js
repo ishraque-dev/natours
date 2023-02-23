@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'User mast have a password'],
     minlength: 8,
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -32,6 +33,9 @@ const UserSchema = new mongoose.Schema({
       message: 'Password not matched properly',
     },
   },
+  passwordChangedAt: {
+    type: Date,
+  },
 });
 UserSchema.pre('save', async function (next) {
   if (!this.isDirectModified('password')) return next();
@@ -39,5 +43,23 @@ UserSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+// Instance methods
+UserSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+UserSchema.methods.afterChangePassword = function (JWT_Exp_TimeStamp) {
+  if (this.passwordChangedAt) {
+    const changeTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return JWT_Exp_TimeStamp < changeTimeStamp;
+  }
+  // false means not changed
+  return false;
+};
 const User = mongoose.model('User', UserSchema);
 module.exports = User;
