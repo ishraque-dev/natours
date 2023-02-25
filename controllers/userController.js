@@ -39,6 +39,16 @@ exports.updateMe = catchAsync(async function (req, res, next) {
     },
   });
 });
+exports.deleteMe = catchAsync(async function (req, res, next) {
+  await User.findByIdAndUpdate(req.user.id, {
+    active: false,
+  });
+  res.status(200).json({
+    status: 'success',
+    message:
+      'Your account has been successfully deleted. If you want to recover your account please contact to the administrator',
+  });
+});
 // ============================================
 exports.createUser = (req, res, next) => {
   res.status(500).json({

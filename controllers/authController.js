@@ -11,6 +11,24 @@ const signAToken = async function (id) {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
+const createAndSendToken = async function (user, statusCode, res) {
+  const token = await signAToken(user._id);
+  const cookieOptions = {
+    expiresIn: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;
+  }
+  res.cookie('jwt', token, cookieOptions);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+};
 exports.signup = catchAsync(async function (req, res, next) {
   const newUser = await User.create({
     name: req.body.name,
@@ -20,14 +38,15 @@ exports.signup = catchAsync(async function (req, res, next) {
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   });
-  const token = await signAToken(newUser._id);
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  await createAndSendToken(newUser, 201, res);
+  // const token = await signAToken(newUser._id);
+  // res.status(201).json({
+  //   status: 'success',
+  //   token,
+  //   data: {
+  //     user: newUser,
+  //   },
+  // });
 });
 exports.login = catchAsync(async function (req, res, next) {
   const { email, password } = req.body;
@@ -44,12 +63,13 @@ exports.login = catchAsync(async function (req, res, next) {
     return next(new AppError('Incorrect email or password', 401));
   }
   // if everything is ok
-  const token = await signAToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-    user,
-  });
+  // const token = await signAToken(user._id);
+  // res.status(200).json({
+  //   status: 'success',
+  //   token,
+  //   user,
+  // });
+  await createAndSendToken(user, 200, res);
 });
 
 // Protected middleware
@@ -156,9 +176,10 @@ exports.resetPassword = catchAsync(async function (req, res, next) {
   user.save();
   //3.Update the changePasswordAt property for the user
   //4. Log the user in and send JWT
-  const token = await signAToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  // const token = await signAToken(user._id);
+  // res.status(200).json({
+  //   status: 'success',
+  //   token,
+  // });
+  await createAndSendToken(user, 200, res);
 });
