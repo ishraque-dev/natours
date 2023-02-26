@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const xxs = require('xss-clean');
+const hpp = require('hpp');
 const tourRouter = require('./routes/tourRoute');
 const userRouter = require('./routes/userRoute');
 const AppError = require('./utils/appError');
@@ -36,7 +37,19 @@ const limiter = rateLimit({
 // Data sanitization against XSS attacks
 app.use(xxs());
 app.use('/api', limiter);
-
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'averageRating',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
 //APP MIDDLEWARE
 // tour routers
 app.use('/api/v1/tours', tourRouter);
