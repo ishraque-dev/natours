@@ -1,6 +1,7 @@
 const slugify = require('slugify');
 // Defining A tour Schema
 const mongoose = require('mongoose');
+const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -69,6 +70,30 @@ const tourSchema = new mongoose.Schema(
       type: String,
       enum: ['easy', 'medium', 'difficult'],
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: Array,
   },
   {
     toJSON: {
@@ -86,6 +111,15 @@ tourSchema.virtual('durationInWeeks').get(function () {
 //DOCUMENT MIDDLEWARE.(PRE) runs before .save() and .create()
 tourSchema.pre('save', function (next) {
   this.slag = slugify(this.name, { lower: true });
+  next();
+});
+tourSchema.pre('save', async function (next) {
+  const guidePromises = this.guides.map(async function (id) {
+    return await User.findById(id);
+  });
+
+  this.guides = await Promise.all(guidePromises);
+
   next();
 });
 //(POST) runs after the .save() and .create()
