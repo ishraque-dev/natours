@@ -94,6 +94,7 @@ const tourSchema = new mongoose.Schema(
       },
     ],
     // guides: Array,(Embeddings)
+    // Child Reference
     guides: [
       {
         type: mongoose.Schema.ObjectId,
@@ -136,8 +137,8 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   next();
 });
-tourSchema.post(/^find/, (doc, next) => {
-  // console.log(doc);
+tourSchema.pre(/^find/, function (next) {
+  this.populate('guides');
   next();
 });
 // AGGREGATION MIDDLEWARE
