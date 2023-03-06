@@ -93,7 +93,13 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
-    guides: Array,
+    // guides: Array,(Embeddings)
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: {
@@ -113,21 +119,17 @@ tourSchema.pre('save', function (next) {
   this.slag = slugify(this.name, { lower: true });
   next();
 });
-tourSchema.pre('save', async function (next) {
-  const guidePromises = this.guides.map(async function (id) {
-    return await User.findById(id);
-  });
+// Modeling Tour Guides with (Embedding Document)
+// tourSchema.pre('save', async function (next) {
+//   const guidePromises = this.guides.map(async function (id) {
+//     return await User.findById(id);
+//   });
 
-  this.guides = await Promise.all(guidePromises);
-
-  next();
-});
-//(POST) runs after the .save() and .create()
-// tourSchema.post('save', function (doc, next) {
-//   console.log(doc);
+//   this.guides = await Promise.all(guidePromises);
 
 //   next();
 // });
+
 // ================
 // QUERY MIDDLEWARE
 tourSchema.pre(/^find/, function (next) {
