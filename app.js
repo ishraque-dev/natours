@@ -4,8 +4,11 @@ const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const xxs = require('xss-clean');
 const hpp = require('hpp');
+// Routers
 const tourRouter = require('./routes/tourRoute');
 const userRouter = require('./routes/userRoute');
+const reviewRouter = require('./routes/reviewRoute');
+// ---------------------------------------
 const AppError = require('./utils/appError');
 const helmet = require('helmet');
 const globalErrorController = require('./controllers/errorController');
@@ -55,7 +58,8 @@ app.use(
 app.use('/api/v1/tours', tourRouter);
 // user Routes
 app.use('/api/v1/users', userRouter);
-
+// Review routes
+app.use('/api/v1/reviews', reviewRouter);
 // =======================
 // MIDDLEWARE: Handling undefined routes
 app.all('*', (req, res, next) => {
