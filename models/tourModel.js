@@ -115,6 +115,12 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationInWeeks').get(function () {
   return this.duration / 7;
 });
+// Virtual population
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
 //DOCUMENT MIDDLEWARE.(PRE) runs before .save() and .create()
 tourSchema.pre('save', function (next) {
   this.slag = slugify(this.name, { lower: true });
