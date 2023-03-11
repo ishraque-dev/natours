@@ -27,3 +27,23 @@ exports.updateOne = function (Model) {
     });
   });
 };
+exports.getOne = function (Model, options) {
+  return catchAsync(async (req, res, next) => {
+    let query = Model.findById(req.params.id);
+    if (options.path === 'populate') {
+      query = query.populate('reviews');
+    }
+    const doc = await query;
+    if (!doc) {
+      return next(
+        new AppError('There is not found document with this id', 404)
+      );
+    }
+    res.status(200).json({
+      status: 'success',
+      data: {
+        doc,
+      },
+    });
+  });
+};
