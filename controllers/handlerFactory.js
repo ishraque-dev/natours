@@ -51,7 +51,9 @@ exports.getOne = function (Model, options) {
 exports.getAll = function (Model) {
   return catchAsync(async (req, res) => {
     // EXECUTE QUERY
-    const features = new APIfeatures(Model.find(), req.query)
+    let filter = {};
+    if (req.params.id) filter = { doc: req.params.id };
+    const features = new APIfeatures(Model.find(filter), req.query)
       .filter()
       .sort()
       .limit()
