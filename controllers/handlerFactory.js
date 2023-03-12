@@ -30,7 +30,7 @@ exports.updateOne = function (Model) {
 exports.getOne = function (Model, options) {
   return catchAsync(async (req, res, next) => {
     let query = Model.findById(req.params.id);
-    if (options.path === 'populate') {
+    if (options && options.path === 'populate') {
       query = query.populate('reviews');
     }
     const doc = await query;
