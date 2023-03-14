@@ -46,7 +46,7 @@ exports.deleteMe = catchAsync(async function (req, res, next) {
       'Your account has been successfully deleted. If you want to recover your account please contact to the administrator',
   });
 });
-// ============================================
+// ===========================================
 exports.createUser = (req, res, next) => {
   res.status(500).json({
     status: 'error',
